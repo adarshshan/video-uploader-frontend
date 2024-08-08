@@ -10,9 +10,11 @@ import { FaCopy } from "react-icons/fa";
 import { Select } from '@/components/ui/select';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import app from '../firebase'
+import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
 
 const page = () => {
-    const inputRef = useRef<HTMLInputElement>(null);
+    let inputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState('');
     const [position, setPosition] = useState('bottom-right')
     const [video, setVideo] = useState<File | undefined>(undefined);
@@ -24,56 +26,75 @@ const page = () => {
     useEffect(() => {
         video && uploadFile(video);
     }, [video]);
-
+    useEffect(() => {
+        handleSetValue();
+    }, [])
+    const handleSetValue = () => {
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+    };
     const uploadFile = (file: any) => {
-        const storage = getStorage(app);
-        const fileName = new Date().getTime() + file.name;
-        const storageRef = ref(storage, 'videos/' + fileName);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        try {
+            const storage = getStorage(app);
+            const fileName = new Date().getTime() + file.name;
+            const storageRef = ref(storage, 'videos/' + fileName);
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setVideoperc(Math.round(progress));
-                switch (snapshot.state) {
-                    case 'paused':
-                        console.log('Upload is paused');
-                        break;
-                    case 'running':
-                        console.log('Upload is running');
-                        break;
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setVideoperc(Math.round(progress));
+                    switch (snapshot.state) {
+                        case 'paused':
+                            console.log('Upload is paused');
+                            break;
+                        case 'running':
+                            console.log('Upload is running');
+                            break;
+                    }
+                },
+                (error) => {
+                    console.log(error);
+                    switch (error.code) {
+                        case 'storage/unauthorized':
+                            // User doesn't have permission to access the object
+                            break;
+                        case 'storage/canceled':
+                            // User canceled the upload
+                            break;
+                        case 'storage/unknown':
+                            // Unknown error occurred, inspect error.serverResponse
+                            break;
+                    }
+                },
+                () => {
+                    // Upload completed successfully, now we can get the download URL
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        console.log('File available at', downloadURL);
+                        setVideoLink(downloadURL);
+                    });
                 }
-            },
-            (error) => {
-                console.log(error);
-                switch (error.code) {
-                    case 'storage/unauthorized':
-                        // User doesn't have permission to access the object
-                        break;
-                    case 'storage/canceled':
-                        // User canceled the upload
-                        break;
-                    case 'storage/unknown':
-                        // Unknown error occurred, inspect error.serverResponse
-                        break;
-                }
-            },
-            () => {
-                // Upload completed successfully, now we can get the download URL
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    console.log('File available at', downloadURL);
-                    setVideoLink(downloadURL);
-                });
-            }
-        );
+            );
+        } catch (error) {
+            console.log(error)
+        }
     }
 
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(name, position);
-        console.log("Form submitted");
+        try {
+            const { data } = await axios.post('http://localhost:5000/api/v-uploader', { name, videoLink, position });
+            console.log(data);
+            if (data.success) {
+                if (inputRef.current) {
+                    inputRef.current.value = `http://localhost:8000?code=${data.newData.code}`;
+                }
+            } else console.log(data.message);
+        } catch (error) {
+            console.log(error);
+        }
     };
     const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         console.log(event.target.value)
@@ -97,6 +118,7 @@ const page = () => {
 
     return (
         <div className='min-h-full '>
+            <ToastContainer position="top-right" autoClose={2000} />
             <AuroraBackground>
                 <HeroHighlight>
                     <motion.h1
@@ -149,9 +171,10 @@ const page = () => {
                                 <div className="flex justify-around">
                                     <Input id="link"
                                         ref={inputRef}
+                                        value={inputRef.current?.value}
                                         placeholder="http://localhost:3000/"
                                         type="text"
-                                        className='px-10' />
+                                        className='px-10 cursor-not-allowed' />
                                     <button
                                         onClick={copyToClipboard}
                                         className='text-2xl' >
