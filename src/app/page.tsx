@@ -5,23 +5,87 @@ import { Highlight, HeroHighlight } from '@/components/ui/hero-highlight'
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, ChangeEvent, useEffect } from 'react'
 import { FaCopy } from "react-icons/fa";
 import { Select } from '@/components/ui/select';
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import app from '../firebase'
 
 const page = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState('');
     const [position, setPosition] = useState('bottom-right')
+    const [video, setVideo] = useState<File | undefined>(undefined);
+    const [videoperc, setVideoperc] = useState(0);
+    const [videoLink, setVideoLink] = useState<null | string>(null);
+
+
+
+    useEffect(() => {
+        video && uploadFile(video);
+    }, [video]);
+
+    const uploadFile = (file: any) => {
+        const storage = getStorage(app);
+        const fileName = new Date().getTime() + file.name;
+        const storageRef = ref(storage, 'videos/' + fileName);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setVideoperc(Math.round(progress));
+                switch (snapshot.state) {
+                    case 'paused':
+                        console.log('Upload is paused');
+                        break;
+                    case 'running':
+                        console.log('Upload is running');
+                        break;
+                }
+            },
+            (error) => {
+                console.log(error);
+                switch (error.code) {
+                    case 'storage/unauthorized':
+                        // User doesn't have permission to access the object
+                        break;
+                    case 'storage/canceled':
+                        // User canceled the upload
+                        break;
+                    case 'storage/unknown':
+                        // Unknown error occurred, inspect error.serverResponse
+                        break;
+                }
+            },
+            () => {
+                // Upload completed successfully, now we can get the download URL
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    console.log('File available at', downloadURL);
+                    setVideoLink(downloadURL);
+                });
+            }
+        );
+    }
 
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(name,position);
+        console.log(name, position);
         console.log("Form submitted");
     };
     const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        console.log(event.target.value)
         setPosition(event.target.value);
+    };
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setVideo(e.target.files[0]);
+        } else {
+            setVideo(undefined);
+        }
     };
 
     const copyToClipboard = () => {
@@ -36,18 +100,9 @@ const page = () => {
             <AuroraBackground>
                 <HeroHighlight>
                     <motion.h1
-                        initial={{
-                            opacity: 0,
-                            y: 20,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: [20, -5, 0],
-                        }}
-                        transition={{
-                            duration: 0.5,
-                            ease: [0.4, 0.0, 0.2, 1],
-                        }}
+                        initial={{ opacity: 0, y: 20, }}
+                        animate={{ opacity: 1, y: [20, -5, 0], }}
+                        transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1], }}
                         className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto flex items-center"
                     >
                         <div>
@@ -61,7 +116,18 @@ const page = () => {
                                 </LabelInputContainer>
                                 <LabelInputContainer className="mb-4">
                                     <Label htmlFor="video">video</Label>
-                                    <Input id="video" placeholder="select the video" type="file" />
+                                    <Input
+                                        id="video"
+                                        placeholder="select the video"
+                                        type="file"
+                                        onChange={handleChange}
+                                        accept='video/*' />
+                                    {videoperc !== 0 && videoperc !== 100 && (< p className="text-xl text-yellow-700">
+                                        {videoperc > 0 && videoperc < 100 ? "Uploading :" + videoperc + "%" : 'video uploaded'}
+                                    </p>)}
+                                    {videoperc === 100 && videoLink !== null && <p className="text-xl text-yellow-700">video uploaded</p>}
+
+
                                 </LabelInputContainer>
                                 <LabelInputContainer className="mb-4">
                                     <Label htmlFor="position">Select position</Label>
@@ -69,10 +135,10 @@ const page = () => {
 
                                 </LabelInputContainer>
                                 <button
-                                    className="mt-5 bg-gradient-to-br relative group/btn from-black to-yellow-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+                                    className={`mt-5 cursor-${(!videoLink || !name.length || !position.length) ? 'not-allowed' : 'default'} text-2xl bg-gradient-to-br relative group/btn from-black to-yellow-600 block w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]`}
                                     type="submit"
                                 >
-                                    Upload &uarr;
+                                    generate URL
                                     <BottomGradient />
                                 </button>
 
@@ -101,6 +167,8 @@ const page = () => {
 }
 
 export default page
+
+
 
 const BottomGradient = () => {
     return (
