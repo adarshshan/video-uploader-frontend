@@ -49,7 +49,6 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     ref={ref}
                     {...props}>
                     <option value="" disabled selected hidden>Choose a position</option>
-                    <option value="top-left">Top Left</option>
                     <option value="bottom-right">Bottom Right</option>
                     <option value="bottom-left">Bottom Left</option>
                 </select>
