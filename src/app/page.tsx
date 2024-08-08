@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { motion } from 'framer-motion';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 import { Highlight, HeroHighlight } from '@/components/ui/hero-highlight'
@@ -13,7 +13,7 @@ import app from '../firebase'
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 
-const page = () => {
+const Page = () => {
     let inputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState('');
     const [position, setPosition] = useState('bottom-right')
@@ -189,7 +189,7 @@ const page = () => {
     )
 }
 
-export default page
+export default Page
 
 
 
