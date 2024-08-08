@@ -85,11 +85,11 @@ const Page = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const { data } = await axios.post('http://localhost:5000/api/v-uploader', { name, videoLink, position });
+            const { data } = await axios.post('http://3.110.225.246:5000/api/v-uploader', { name, videoLink, position });
             console.log(data);
             if (data.success) {
                 if (inputRef.current) {
-                    inputRef.current.value = `http://localhost:8000?code=${data.newData.code}`;
+                    inputRef.current.value = `https://nextjs-with-aceternity.vercel.app?code=${data.newData.code}`;
                 }
             } else console.log(data.message);
         } catch (error) {
