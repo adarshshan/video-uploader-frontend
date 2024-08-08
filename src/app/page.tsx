@@ -5,15 +5,23 @@ import { Highlight, HeroHighlight } from '@/components/ui/hero-highlight'
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { cn } from "@/lib/utils";
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { FaCopy } from "react-icons/fa";
 import { Select } from '@/components/ui/select';
 
 const page = () => {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [name, setName] = useState('');
+    const [position, setPosition] = useState('bottom-right')
+
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        console.log(name,position);
         console.log("Form submitted");
+    };
+    const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setPosition(event.target.value);
     };
 
     const copyToClipboard = () => {
@@ -49,15 +57,15 @@ const page = () => {
                             <form className="my-8" onSubmit={handleSubmit}>
                                 <LabelInputContainer className="mb-4">
                                     <Label htmlFor="name">Video name</Label>
-                                    <Input id="name" placeholder="Name" type="text" />
+                                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" type="text" />
                                 </LabelInputContainer>
                                 <LabelInputContainer className="mb-4">
-                                    <Label htmlFor="password">video</Label>
-                                    <Input id="password" placeholder="select the video" type="file" />
+                                    <Label htmlFor="video">video</Label>
+                                    <Input id="video" placeholder="select the video" type="file" />
                                 </LabelInputContainer>
                                 <LabelInputContainer className="mb-4">
                                     <Label htmlFor="position">Select position</Label>
-                                    <Select id='position' />
+                                    <Select id='position' value={position} onChange={handleSelectChange} />
 
                                 </LabelInputContainer>
                                 <button
