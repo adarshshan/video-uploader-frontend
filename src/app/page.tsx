@@ -85,7 +85,7 @@ const Page = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const { data } = await axios.post('http://3.110.225.246:5000/api/v-uploader', { name, videoLink, position });
+            const { data } = await axios.post('https://www.sparekit.shop/api/v-uploader', { name, videoLink, position });
             console.log(data);
             if (data.success) {
                 if (inputRef.current) {
