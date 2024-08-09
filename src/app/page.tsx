@@ -161,6 +161,7 @@ const Page = () => {
 
                             </form>
                             <div className="mb-4 ">
+                                <p className='text-lg text-gray-400'>Copy the link</p>
                                 <div className="flex justify-around">
                                     <Input id="link"
                                         ref={inputRef}
