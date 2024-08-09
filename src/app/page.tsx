@@ -82,8 +82,9 @@ const Page = () => {
         try {
             const { data } = await axios.post('https://www.sparekit.shop/api/v-uploader', { name, videoLink, position });
             if (data.success) {
+                console.log(data);
                 if (inputRef.current) {
-                    inputRef.current.value = `https://nextjs-with-aceternity.vercel.app?code=${data.newData.code}`;
+                    inputRef.current.value = `<script defer src="https://www.sparekit.shop/api/v-uploader/video-script/${data.newData.code}"></script>`;
                 }
             } else console.log(data.message);
         } catch (error) {
