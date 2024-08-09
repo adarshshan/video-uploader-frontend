@@ -58,20 +58,15 @@ const Page = () => {
                     console.log(error);
                     switch (error.code) {
                         case 'storage/unauthorized':
-                            // User doesn't have permission to access the object
                             break;
                         case 'storage/canceled':
-                            // User canceled the upload
                             break;
                         case 'storage/unknown':
-                            // Unknown error occurred, inspect error.serverResponse
                             break;
                     }
                 },
                 () => {
-                    // Upload completed successfully, now we can get the download URL
                     getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        console.log('File available at', downloadURL);
                         setVideoLink(downloadURL);
                     });
                 }
@@ -86,7 +81,6 @@ const Page = () => {
         e.preventDefault();
         try {
             const { data } = await axios.post('https://www.sparekit.shop/api/v-uploader', { name, videoLink, position });
-            console.log(data);
             if (data.success) {
                 if (inputRef.current) {
                     inputRef.current.value = `https://nextjs-with-aceternity.vercel.app?code=${data.newData.code}`;
@@ -97,7 +91,6 @@ const Page = () => {
         }
     };
     const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        console.log(event.target.value)
         setPosition(event.target.value);
     };
 
@@ -153,7 +146,7 @@ const Page = () => {
                                 </LabelInputContainer>
                                 <LabelInputContainer className="mb-4">
                                     <Label htmlFor="position">Select position</Label>
-                                    <Select id='position' value={position} onChange={handleSelectChange} />
+                                    <Select id='position' onChange={handleSelectChange} />
 
                                 </LabelInputContainer>
                                 <button
