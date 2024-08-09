@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="https://cdn.pixabay.com/photo/2016/01/03/00/43/upload-1118929_640.png" />
+        <title>V-Uploader</title>
       </head>
       <body className={inter.className}>{children}</body>
     </html>
